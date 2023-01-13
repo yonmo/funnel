@@ -1,6 +1,5 @@
 # The Custom Built Browser Code Is Kinda Big
 mozilla-central/
 export/
-src/
 cookies_store
 credentials_store
