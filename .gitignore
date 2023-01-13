@@ -1,0 +1,5 @@
+# The Custom Built Browser Code Is Kinda Big
+mozilla-central/
+export/
+cookies_store
+credentials_store

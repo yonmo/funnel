@@ -1,0 +1,1 @@
+window.curedCanvas = Object.setPrototypeOf(document.evaluate("//canvas[@ class='page']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue, window.top.cureCanvas.prototype);
