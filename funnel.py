@@ -6,6 +6,7 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.common.exceptions import TimeoutException
 
 import os, binascii, sys, pickle
 
@@ -53,20 +54,24 @@ def infect(driver):
     '''
     Funky Exploit Code To Control What Functions Are Alive And Well
     '''
-    # Prototype Poison To Enable Javascript Injection
-    driver.execute_script(minify('injection.js'))
-    # Hidden New Step (Bypass CORS' Tainted Canvas Using Proxied Global Object Pollution) "aka didn't work, but was cool. see scripts folder"
-    driver.execute_script(minify('proxy.js'))
-    # iFrame Sandboxed Object Prototype Creation
-    iframe = driver.find_element(By.XPATH, '//iframe')
-    driver.switch_to.frame(iframe)
-    # Abuse Global Variables Inside of Sandbox (EWWWWW)
-    driver.execute_script(minify('creation.js'))
-    driver.switch_to.default_content()
-    # Wait Until Canvas Loads
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//canvas[@ class="page"]')))
-    # Prototype Poison Canvas -> Profit (Assuming Shit Worked!)
-    driver.execute_script(minify('poison.js'))
+    try:
+        # Prototype Poison To Enable Javascript Injection
+        driver.execute_script(minify('injection.js'))
+        # Hidden New Step (Bypass CORS' Tainted Canvas Using Proxied Global Object Pollution) "aka didn't work, but was cool. see scripts folder"
+        driver.execute_script(minify('proxy.js'))
+        # iFrame Sandboxed Object Prototype Creation
+        iframe = driver.find_element(By.XPATH, '//iframe')
+        driver.switch_to.frame(iframe)
+        # Abuse Global Variables Inside of Sandbox (EWWWWW)
+        driver.execute_script(minify('creation.js'))
+        driver.switch_to.default_content()
+        # Wait Until Canvas Loads
+        WebDriverWait(driver, 150).until(EC.presence_of_element_located((By.XPATH, '//canvas[@ class="page"]')))
+        # Prototype Poison Canvas -> Profit (Assuming Shit Worked!)
+        driver.execute_script(minify('poison.js'))
+        return 0
+    except TimeoutException:
+        return 1
 
 def cleanup(driver):
     '''
@@ -74,15 +79,16 @@ def cleanup(driver):
     '''
     driver.close()
 
-def controller(driver, location, last_page=None):
+def controller(driver, location, start_page=1, last_page=None):
     '''
     Main Controller That Selects Books To Download From A URL
     '''
-    page_num = 1
+    page_num = int(start_page)
     driver.get(BASE_URL + location + '/page_' + str(page_num))
     if last_page == None:
-        last_page = driver.find_element(By.XPATH, "//a[@ title='Last Page']").get_attribute('href')
-    while driver.current_url != last_page:
+        last_page = driver.find_element(By.XPATH, "//a[@ title='Last Page']").get_attribute('href').split('_')[1]
+    while page_num != int(last_page) + 1:
+        print('Ripping Content <Page: ' + str(page_num) + ' >')
         book_elements = driver.execute_script('return document.querySelectorAll(\'a[href^="/hentai/"]:not([class])\');')
         book_names = [x.get_attribute('href') for x in book_elements]
         for book_name in book_names:
@@ -94,13 +100,21 @@ def download_book(driver, book):
     '''
     Main Download Manager That Gets The Page Count And Returns The Images
     '''
+    print('Ripping Book <Title: ' + book + ' >')
     driver.get(book + '/read/page/1')
-    infect(driver)
-    max = int(driver.execute_script('return document.evaluate(\'//span[@ class="count js-count"]\', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.innerText;'))
-    for i in range(1, max + 1):
-        driver.get(book + '/read/page/' + str(i))
-        infect(driver)
-        export(driver.execute_script('return window.curedCanvas.toDataURL();'), book, str(i))
+    if infect(driver) == 1:
+    	return
+    else:
+        max = int(driver.execute_script('return document.evaluate(\'//span[@ class="count js-count"]\', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.innerText;'))
+        i = 1
+        while i != max + 1:
+            try:
+                driver.get(book + '/read/page/' + str(i))
+                infect(driver)
+                export(driver.execute_script('return window.curedCanvas.toDataURL();'), book, str(i))
+                i = i + 1
+            except TimeoutException:
+                i = i - 1
 
 def export(data, book, filename):
     '''
@@ -120,15 +134,23 @@ def main():
     Procedural Main, I Am Not Going To Code A Whole OOP Object For This Dumb Bet
     '''
     try:
-        # Thankfully This Defaults To 127.0.0.1:4444 The Default GeckoDriver Config On Build
-        driver = WebDriver()
+        file_tokens = __file__.split('/')
+        filename = file_tokens[len(file_tokens) - 1]
+        driver = WebDriver() # Thankfully This Defaults To 127.0.0.1:4444 The Default GeckoDriver Config On Build
         login(driver)
-        if sys.argv[len(sys.argv) - 1] != __file__:
-            controller(driver, sys.argv[len(sys.argv) - 1])
+        for i in range(len(sys.argv)):
+            if sys.argv[i] == filename:
+                if i + 3 <= len(sys.argv) - 1:
+                    controller(driver, sys.argv[i + 1], sys.argv[i + 2], sys.argv[i + 3])
+                elif i + 2 <= len(sys.argv) - 1:
+                    controller(driver, sys.argv[i + 1], sys.argv[i + 2])
+                elif i + 1 <= len(sys.argv) - 1:
+                    controller(driver, sys.argv[i + 1])
+                else:
+                    break
+                break
     except KeyboardInterrupt:
         print('\nThanks For Testing This I Guess???')
-    except Exception:
-        print('Debug Me Dear God...')
     cleanup(driver)
 
 if __name__ == '__main__':

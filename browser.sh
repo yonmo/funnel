@@ -4,7 +4,8 @@ if [ "$EUID" = 0 ]; then
 
     # Necessary Setup
 
-    sudo apt install mercurial
+    sudo apt install mercurial python3 python3-pip
+    # ln -s <place> export
     hg clone https://hg.mozilla.org/mozilla-central/
     cd mozilla-central
     ./mach bootstrap
