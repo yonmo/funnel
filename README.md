@@ -1,9 +1,7 @@
-# shiny-octo-potato
+# Funnel
 
-The most interesting security techniques can be found in the oddest of places, and this was no different.
+Bypassing client side anti-piracy protections using object prototype poisoning and realm cleaning 
 
-This is the finished demonstration code for the bypass I wrote during my research into the FAKKU client side anti-piracy scripting.
+This is the finished demonstration code for the bypass I wrote during my research into FAKKU's client side anti-piracy scripting.
 
-In order to test this code, modifications must be made to the Firefox browser, and additionally a rebuilt gecko driver supplied to the funnel.py script.
-
-WARNING: This code is for educational purposes only, and should not be used to violate the TOS/EULA of the company in question.
+WARNING: This code is for educational purposes only, and I am not endorsing its usage to violate the TOS/EULA of any company.
