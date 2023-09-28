@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-# About To Write Some Medium Level Heresy Using iFrame Sanboxed Object Poisoning
-
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -10,7 +8,7 @@ from selenium.common.exceptions import TimeoutException
 
 import os, binascii, sys, pickle
 
-BASE_URL = 'https://fakku.net'
+BASE_URL = ''
 
 def minify(file):
     '''
@@ -23,7 +21,7 @@ def minify(file):
 
 def login(driver):
     '''
-    Boring Function Used To Automate Login, Since I Am Lazy
+    Login Automation
     '''
     driver.get(BASE_URL + '/login')
     try:
@@ -52,7 +50,7 @@ def login(driver):
 
 def infect(driver):
     '''
-    Funky Exploit Code To Control What Functions Are Alive And Well
+    Exploit Code
     '''
     try:
         # Prototype Poison To Enable Javascript Injection
@@ -67,7 +65,7 @@ def infect(driver):
         driver.switch_to.default_content()
         # Wait Until Canvas Loads
         WebDriverWait(driver, 150).until(EC.presence_of_element_located((By.XPATH, '//canvas[@ class="page"]')))
-        # Prototype Poison Canvas -> Profit (Assuming Shit Worked!)
+        # Prototype Poison Canvas -> Profit (Assuming It Worked!)
         driver.execute_script(minify('poison.js'))
         return 0
     except TimeoutException:
@@ -131,7 +129,7 @@ def export(data, book, filename):
 
 def main():
     '''
-    Procedural Main, I Am Not Going To Code A Whole OOP Object For This Dumb Bet
+    Procedural Main
     '''
     try:
         file_tokens = __file__.split('/')
